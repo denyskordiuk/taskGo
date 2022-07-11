@@ -13,6 +13,7 @@ type Dog struct {
 }
 type Cat struct {
 	Animal
+	IsFavorite bool
 }
 type Cow struct {
 	Animal

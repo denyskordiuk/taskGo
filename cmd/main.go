@@ -11,7 +11,7 @@ const dogFeed int = 2
 const catFeed int = 7
 const cowFeed int = 25
 const catCoefficient float64 = 0.4
-const cowCoefficient float64 = 2.45
+const cowCoefficient float64 = 3.45
 
 func farmGenerator(animalCount int) (animals []stuff.CreateAnimal) {
 	var animal stuff.CreateAnimal
@@ -28,17 +28,35 @@ func farmGenerator(animalCount int) (animals []stuff.CreateAnimal) {
 				FeedCount: dogFeed,
 			}}
 		case 2:
-			animal = stuff.Cat{stuff.Animal{
+			flag := false
+			favoriteCatFeed := catFeed
+			if animalCount%2 == 0 {
+				flag = true
+			}
+			if flag == true {
+				favoriteCatFeed = 2 * catFeed
+			}
+			animalTmp := stuff.Animal{
 				Name:      "Cat",
 				Weight:    int(float64(animalWeightTemplate) * catCoefficient),
-				FeedCount: catFeed,
-			}}
+				FeedCount: favoriteCatFeed,
+			}
+			animal = stuff.Cat{
+				Animal:     animalTmp,
+				IsFavorite: flag,
+			}
 		case 3:
-			animal = stuff.Cow{stuff.Animal{
-				Name:      "Cow",
-				Weight:    int(float64(animalWeightTemplate) * cowCoefficient),
-				FeedCount: cowFeed,
-			}}
+			weight := int(float64(animalWeightTemplate) * cowCoefficient)
+			favoriteCowFeed := cowFeed
+			if weight > 200 {
+				favoriteCowFeed = 20
+			}
+			animal = stuff.Cow{
+				stuff.Animal{
+					Name:      "Cow",
+					Weight:    weight,
+					FeedCount: favoriteCowFeed,
+				}}
 		}
 		animals = append(animals, animal)
 	}
