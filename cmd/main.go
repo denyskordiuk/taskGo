@@ -1,88 +1,66 @@
 package main
 
 import (
+	"errors"
 	"fmt"
+	"log"
 	"math/rand"
-	"taskProject/taskGo/stuff"
 	"time"
+
+	"github.com/denyskordiuk/taskGo/stuff"
+	nameGenerator "github.com/goombaio/namegenerator"
 )
 
-const dogFeed int = 2
-const catFeed int = 7
-const cowFeed int = 25
-const catCoefficient float64 = 0.4
-const cowCoefficient float64 = 3.45
+var (
+	errEmptyFarm = errors.New("empty farm")
+)
 
-func farmGenerator(animalCount int) (animals []stuff.CreateAnimal) {
-	var animal stuff.CreateAnimal
+func main() {
+	seed := time.Now().UnixNano()
+	rand.Seed(seed)
+	generator := nameGenerator.NewNameGenerator(seed)
+	animals := farmGenerator(10, generator)
+	for _, animal := range animals {
+		fmt.Println(animal.Info())
+	}
 
-	for i := 0; i < animalCount; i++ {
-		animalNumber := rand.Intn(3) + 1
-		animalWeightTemplate := rand.Intn(20) + 40
+	count, err := allFeedCount(animals)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Printf("\nCount of feed u need for this animals - %d\n", count)
+}
+
+func farmGenerator(count int, g nameGenerator.Generator) []stuff.Animal {
+	animals := make([]stuff.Animal, 0, count)
+	for i := 0; i < count; i++ {
+		animalNumber := rand.Intn(3)
+		name := g.Generate()
 
 		switch animalNumber {
+		case 0:
+			animals = append(animals, stuff.NewCow(name))
 		case 1:
-			animal = stuff.Dog{stuff.Animal{
-				Name:      "Dog",
-				Weight:    animalWeightTemplate,
-				FeedCount: dogFeed,
-			}}
+			animals = append(animals, stuff.NewDog(name))
 		case 2:
-			flag := false
-			favoriteCatFeed := catFeed
-			if animalCount%2 == 0 {
-				flag = true
-			}
-			if flag == true {
-				favoriteCatFeed = 2 * catFeed
-			}
-			animalTmp := stuff.Animal{
-				Name:      "Cat",
-				Weight:    int(float64(animalWeightTemplate) * catCoefficient),
-				FeedCount: favoriteCatFeed,
-			}
-			animal = stuff.Cat{
-				Animal:     animalTmp,
-				IsFavorite: flag,
-			}
-		case 3:
-			weight := int(float64(animalWeightTemplate) * cowCoefficient)
-			favoriteCowFeed := cowFeed
-			if weight > 200 {
-				favoriteCowFeed = 20
-			}
-			animal = stuff.Cow{
-				stuff.Animal{
-					Name:      "Cow",
-					Weight:    weight,
-					FeedCount: favoriteCowFeed,
-				}}
+			animals = append(animals, stuff.NewCat(name))
 		}
-		animals = append(animals, animal)
 	}
 
 	return animals
 }
 
-func farmInfo(animals []stuff.CreateAnimal) {
-	fmt.Println("\nSo here is animals list:")
-	for i, a := range animals {
-		fmt.Printf("#%d\t%s", i+1, a.InfoAnimal())
+func allFeedCount(animals []stuff.Animal) (int, error) {
+	if len(animals) == 0 {
+		return 0, errEmptyFarm
 	}
-}
 
-func allFeedCount(animals []stuff.CreateAnimal) (count int) {
-	for _, a := range animals {
-		count += a.FeedWeight()
+	var count int
+
+	for _, animal := range animals {
+		count += animal.FeedWeight()
 	}
-	return count
-}
 
-func main() {
-	rand.Seed(time.Now().UnixNano())
-	animalNumber := 30
-	animals := farmGenerator(animalNumber)
-	farmInfo(animals)
-	fmt.Printf("\nCount of feed u need for this animals - %d\n", allFeedCount(animals))
-
+	return count, nil
 }
